@@ -62,11 +62,13 @@ class _LoginPageState extends State<LoginPage> {
     final data = jsonDecode(response.body);
     int value = data['value'];
     String message = data['message'];
+    String usernameApi = data['username'];
+    String namaApi = data['nama'];
 
     if (value == 1) {
       setState(() {
         _loginStatus = LoginStatus.signIn;
-        savePref(value);
+        savePref(value, usernameApi, namaApi);
       });
       Fluttertoast.showToast(msg: message, toastLength: Toast.LENGTH_SHORT);
     } else {
@@ -74,10 +76,12 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  savePref(int value) async {
+  savePref(int value, String username, String nama) async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     setState(() {
       preferences.setInt("value", value);
+      preferences.setString("username", username);
+      preferences.setString("nama", nama);
       preferences.commit();
     });
   }
@@ -160,6 +164,16 @@ class _LoginPageState extends State<LoginPage> {
                     check();
                   },
                   child: Text("Login"),
+                ),
+                InkWell(
+                  onTap: () {
+                    Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => Register()));
+                  },
+                  child: Text(
+                    "Create a new account",
+                    textAlign: TextAlign.center,
+                  ),
                 )
               ],
             ),
@@ -181,10 +195,97 @@ class Register extends StatefulWidget {
 class _RegisterState extends State<Register> {
   String username, password, nama;
   final _key = new GlobalKey<FormState>();
+
+  bool _secureText = true;
+  showHide() {
+    setState(() {
+      _secureText = !_secureText;
+    });
+  }
+
+  check() {
+    final form = _key.currentState;
+
+    if (form.validate()) {
+      form.save();
+      register();
+    }
+  }
+
+  register() async {
+    final response = await http.post(
+        "http://192.168.43.69/flutter_login/api/register.php",
+        body: {"nama": nama, "username": username, "password": password});
+    final data = jsonDecode(response.body);
+    int value = data['value'];
+    String message = data['message'];
+
+    if (value == 1) {
+      Fluttertoast.showToast(msg: message, toastLength: Toast.LENGTH_SHORT);
+      Navigator.pop(context);
+    } else {
+      Fluttertoast.showToast(msg: message, toastLength: Toast.LENGTH_SHORT);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Register Page", style: TextStyle(color: Colors.black),),
+        backgroundColor: Colors.white,
+      ),
+      body: Form(
+        key: _key,
+        child: ListView(
+          padding: EdgeInsets.all(20.0),
+          children: <Widget>[
+            TextFormField(
+              validator: (e) {
+                if (e.isEmpty) {
+                  print("Please insert your name");
+                }
+              },
+              onSaved: (e) => nama = e,
+              decoration: InputDecoration(
+                  labelText: "Nama Lengkap", hintText: "Nama Lengkap"),
+            ),
+            TextFormField(
+              validator: (e) {
+                if (e.isEmpty) {
+                  print("Please insert your username");
+                }
+              },
+              onSaved: (e) => username = e,
+              decoration:
+                  InputDecoration(labelText: "Username", hintText: "Username"),
+            ),
+            TextFormField(
+              validator: (e) {
+                if (e.isEmpty) {
+                  print("Please insert your password");
+                }
+              },
+              onSaved: (e) => password = e,
+              obscureText: _secureText,
+              decoration: InputDecoration(
+                  labelText: "Password",
+                  hintText: "Password",
+                  suffixIcon: IconButton(
+                    onPressed: showHide,
+                    icon: Icon(
+                        _secureText ? Icons.visibility_off : Icons.visibility),
+                  )),
+            ),
+            MaterialButton(
+              onPressed: (){
+                check();
+              },
+              child: Text("Register"),
+            )
+          ],
+        ),
+      ),
     );
   }
 }
@@ -203,14 +304,30 @@ class _MainMenuState extends State<MainMenu> {
     });
   }
 
+  String username = "", nama = "";
+  getPref() async{
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    setState(() {
+     username = preferences.getString("username");
+     nama = preferences.getString("nama"); 
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getPref();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("MainMenu"),
+        title: Text("Home", style: TextStyle(color: Colors.black),),
+        backgroundColor: Colors.white,
         actions: <Widget>[
           IconButton(
-            onPressed: (){
+            onPressed: () {
               signOut();
             },
             icon: Icon(Icons.lock_open),
@@ -219,7 +336,7 @@ class _MainMenuState extends State<MainMenu> {
       ),
       body: Center(
         child: Text(
-          "Main Menu",
+          "Username : $username \n Nama : $nama",
           style: TextStyle(fontFamily: "JSans", fontSize: 24.0),
         ),
       ),
