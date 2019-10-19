@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_login/modal/api.dart';
 import 'package:http/http.dart' as http;
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -50,8 +51,7 @@ class _LoginPageState extends State<LoginPage> {
   // membuat method untuk login ke db
   login() async {
     // untuk post wajib ada body properti
-    final response = await http
-        .post("http://192.168.43.69/flutter_login/api/login.php", body: {
+    final response = await http.post(BaseUrl.login, body: {
       // sesuaikan dengan key yg sudah dibuat pada api
       "username":
           username, // key username kemudian nilai inputnya dari mana,  dari string username
@@ -213,8 +213,7 @@ class _RegisterState extends State<Register> {
   }
 
   register() async {
-    final response = await http.post(
-        "http://192.168.43.69/flutter_login/api/register.php",
+    final response = await http.post(BaseUrl.register,
         body: {"nama": nama, "username": username, "password": password});
     final data = jsonDecode(response.body);
     int value = data['value'];
@@ -232,7 +231,10 @@ class _RegisterState extends State<Register> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Register Page", style: TextStyle(color: Colors.black),),
+        title: Text(
+          "Register Page",
+          style: TextStyle(color: Colors.black),
+        ),
         backgroundColor: Colors.white,
       ),
       body: Form(
@@ -278,7 +280,7 @@ class _RegisterState extends State<Register> {
                   )),
             ),
             MaterialButton(
-              onPressed: (){
+              onPressed: () {
                 check();
               },
               child: Text("Register"),
@@ -305,11 +307,11 @@ class _MainMenuState extends State<MainMenu> {
   }
 
   String username = "", nama = "";
-  getPref() async{
+  getPref() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     setState(() {
-     username = preferences.getString("username");
-     nama = preferences.getString("nama"); 
+      username = preferences.getString("username");
+      nama = preferences.getString("nama");
     });
   }
 
@@ -323,7 +325,10 @@ class _MainMenuState extends State<MainMenu> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Home", style: TextStyle(color: Colors.black),),
+        title: Text(
+          "Home",
+          style: TextStyle(color: Colors.black),
+        ),
         backgroundColor: Colors.white,
         actions: <Widget>[
           IconButton(
